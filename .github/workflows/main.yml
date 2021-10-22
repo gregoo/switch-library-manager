@@ -63,5 +63,5 @@ jobs:
         with:
           artifacts: "output/*/*.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
-          draft: true
+          # draft: true
           allowUpdates: true
