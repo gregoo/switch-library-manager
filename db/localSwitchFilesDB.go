@@ -53,6 +53,7 @@ type LocalSwitchFilesDB struct {
 }
 
 func scanFolder(folder string, recursive bool, files *[]ExtendedFileInfo, progress ProgressUpdater) error {
+	//nolint:errcheck
 	filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if path == folder {
 			return nil

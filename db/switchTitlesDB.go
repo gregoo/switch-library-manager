@@ -13,7 +13,6 @@ const (
 )
 
 type TitleAttributes struct {
-	intId       uint64      `json:"-"`
 	Id          string      `json:"id"`
 	Name        string      `json:"name,omitempty"`
 	Version     json.Number `json:"version,omitempty"`

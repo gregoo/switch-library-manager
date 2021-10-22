@@ -41,8 +41,11 @@ func (ldb *LocalSwitchDBManager) CreateLocalSwitchFilesDB(folders []string,
 	files := []ExtendedFileInfo{}
 
 	if !ignoreCache {
+		//nolint:errcheck
 		ldb.db.GetEntry(DB_TABLE_LOCAL_LIBRARY, "files", &files)
+		//nolint:errcheck
 		ldb.db.GetEntry(DB_TABLE_LOCAL_LIBRARY, "skipped", &skipped)
+		//nolint:errcheck
 		ldb.db.GetEntry(DB_TABLE_LOCAL_LIBRARY, "titles", &titles)
 	}
 
@@ -60,8 +63,11 @@ func (ldb *LocalSwitchDBManager) CreateLocalSwitchFilesDB(folders []string,
 
 		ldb.processLocalFiles(files, progress, titles, skipped)
 
+		//nolint:errcheck
 		ldb.db.AddEntry(DB_TABLE_LOCAL_LIBRARY, "files", files)
+		//nolint:errcheck
 		ldb.db.AddEntry(DB_TABLE_LOCAL_LIBRARY, "skipped", skipped)
+		//nolint:errcheck
 		ldb.db.AddEntry(DB_TABLE_LOCAL_LIBRARY, "titles", titles)
 	}
 
