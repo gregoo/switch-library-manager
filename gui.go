@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -31,6 +32,12 @@ func StartGUI() {
 	// Remote modules
 	enableRemoteModule := true
 
+	// Define ignored signals for non windows OS
+	var ignoredSignals []os.Signal
+	if runtime.GOOS != "windows" {
+		ignoredSignals = append(ignoredSignals, syscall.SIGURG)
+	}
+
 	// Run bootstrap
 	bootstrapErr := bootstrap.Run(bootstrap.Options{
 		Asset:    Asset,
@@ -45,7 +52,7 @@ func StartGUI() {
 			//VersionElectron:    VersionElectron,
 		},
 		// Ignore urgent signals
-		IgnoredSignals: []os.Signal{syscall.SIGURG},
+		IgnoredSignals: ignoredSignals,
 		Debug:          false,
 		Logger:         log.New(log.Writer(), log.Prefix(), log.Flags()),
 		RestoreAssets:  RestoreAssets,
