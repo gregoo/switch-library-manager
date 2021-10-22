@@ -52,14 +52,14 @@ type LocalSwitchFilesDB struct {
 	NumFiles  int
 }
 
-func scanFolder(folder string, recursive bool, files *[]ExtendedFileInfo, progress ProgressUpdater) error {
+func scanFolder(folder string, recursive bool, files *[]ExtendedFileInfo, progress ProgressUpdater, logger *zap.SugaredLogger) error {
 	//nolint:errcheck
 	filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if path == folder {
 			return nil
 		}
 		if err != nil {
-			zap.S().Error("Error while scanning folders", err)
+			logger.Error("Error while scanning folders", err)
 			return nil
 		}
 

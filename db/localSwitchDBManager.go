@@ -52,7 +52,7 @@ func (ldb *LocalSwitchDBManager) CreateLocalSwitchFilesDB(folders []string,
 	if len(titles) == 0 {
 
 		for i, folder := range folders {
-			err := scanFolder(folder, recursive, &files, progress)
+			err := scanFolder(folder, recursive, &files, progress, ldb.logger)
 			if progress != nil {
 				progress.UpdateProgress(i+1, len(folders)+1, "scanning files in "+folder)
 			}
@@ -161,7 +161,7 @@ func (ldb *LocalSwitchDBManager) processLocalFiles(files []ExtendedFileInfo,
 
 				if update, ok := switchTitle.Updates[metadata.Version]; ok {
 					skipped[file] = SkippedFile{ReasonCode: REASON_DUPLICATE, ReasonText: "duplicate update file (" + update.ExtendedInfo.FileName + ")"}
-					zap.S().Warnf("-->Duplicate update file found [%v] and [%v]", update.ExtendedInfo.FileName, file.FileName)
+					ldb.logger.Warnf("-->Duplicate update file found [%v] and [%v]", update.ExtendedInfo.FileName, file.FileName)
 					continue
 				}
 				switchTitle.Updates[metadata.Version] = SwitchFileInfo{ExtendedInfo: file, Metadata: metadata}
@@ -180,7 +180,7 @@ func (ldb *LocalSwitchDBManager) processLocalFiles(files []ExtendedFileInfo,
 				metadata.Type = "Base"
 				if switchTitle.BaseExist {
 					skipped[file] = SkippedFile{ReasonCode: REASON_DUPLICATE, ReasonText: "duplicate base file (" + switchTitle.File.ExtendedInfo.FileName + ")"}
-					zap.S().Warnf("-->Duplicate base file found [%v] and [%v]", file.FileName, switchTitle.File.ExtendedInfo.FileName)
+					ldb.logger.Warnf("-->Duplicate base file found [%v] and [%v]", file.FileName, switchTitle.File.ExtendedInfo.FileName)
 					continue
 				}
 				switchTitle.File = SwitchFileInfo{ExtendedInfo: file, Metadata: metadata}
@@ -193,11 +193,11 @@ func (ldb *LocalSwitchDBManager) processLocalFiles(files []ExtendedFileInfo,
 				if dlc, ok := switchTitle.Dlc[metadata.TitleId]; ok {
 					if metadata.Version < dlc.Metadata.Version {
 						skipped[file] = SkippedFile{ReasonCode: REASON_OLD_UPDATE, ReasonText: "old DLC file, newer version exist locally"}
-						zap.S().Warnf("-->Old DLC file found [%v] and [%v]", file.FileName, dlc.ExtendedInfo.FileName)
+						ldb.logger.Warnf("-->Old DLC file found [%v] and [%v]", file.FileName, dlc.ExtendedInfo.FileName)
 						continue
 					} else if metadata.Version == dlc.Metadata.Version {
 						skipped[file] = SkippedFile{ReasonCode: REASON_DUPLICATE, ReasonText: "duplicate DLC file (" + dlc.ExtendedInfo.FileName + ")"}
-						zap.S().Warnf("-->Duplicate DLC file found [%v] and [%v]", file.FileName, dlc.ExtendedInfo.FileName)
+						ldb.logger.Warnf("-->Duplicate DLC file found [%v] and [%v]", file.FileName, dlc.ExtendedInfo.FileName)
 						continue
 					}
 				}
@@ -220,7 +220,7 @@ func (ldb *LocalSwitchDBManager) getGameMetadata(file ExtendedFileInfo,
 		err = ldb.db.GetEntry(DB_TABLE_FILE_SCAN_METADATA, fileKey, &metadata)
 
 		if err != nil {
-			zap.S().Warnf("%v", err)
+			ldb.logger.Warnf("%v", err)
 		}
 
 		if metadata != nil {
@@ -233,20 +233,20 @@ func (ldb *LocalSwitchDBManager) getGameMetadata(file ExtendedFileInfo,
 			metadata, err = switchfs.ReadNspMetadata(filePath, ldb.settings.SwitchKeys)
 			if err != nil {
 				skipped[file] = SkippedFile{ReasonCode: REASON_MALFORMED_FILE, ReasonText: fmt.Sprintf("failed to read NSP [reason: %v]", err)}
-				zap.S().Errorf("[file:%v] failed to read NSP [reason: %v]\n", file.FileName, err)
+				ldb.logger.Errorf("[file:%v] failed to read NSP [reason: %v]\n", file.FileName, err)
 			}
 		} else if strings.HasSuffix(fileName, "xci") ||
 			strings.HasSuffix(fileName, "xcz") {
 			metadata, err = switchfs.ReadXciMetadata(filePath, ldb.settings.SwitchKeys)
 			if err != nil {
 				skipped[file] = SkippedFile{ReasonCode: REASON_MALFORMED_FILE, ReasonText: fmt.Sprintf("failed to read NSP [reason: %v]", err)}
-				zap.S().Errorf("[file:%v] failed to read file [reason: %v]\n", file.FileName, err)
+				ldb.logger.Errorf("[file:%v] failed to read file [reason: %v]\n", file.FileName, err)
 			}
 		} else if strings.HasSuffix(fileName, "00") {
 			metadata, err = fileio.ReadSplitFileMetadata(filePath, ldb.settings.SwitchKeys)
 			if err != nil {
 				skipped[file] = SkippedFile{ReasonCode: REASON_MALFORMED_FILE, ReasonText: fmt.Sprintf("failed to read split files [reason: %v]", err)}
-				zap.S().Errorf("[file:%v] failed to read NSP [reason: %v]\n", file.FileName, err)
+				ldb.logger.Errorf("[file:%v] failed to read NSP [reason: %v]\n", file.FileName, err)
 			}
 		}
 	}
@@ -255,7 +255,7 @@ func (ldb *LocalSwitchDBManager) getGameMetadata(file ExtendedFileInfo,
 		err = ldb.db.AddEntry(DB_TABLE_FILE_SCAN_METADATA, fileKey, metadata)
 
 		if err != nil {
-			zap.S().Warnf("%v", err)
+			ldb.logger.Warnf("%v", err)
 		}
 		return metadata, nil
 	}

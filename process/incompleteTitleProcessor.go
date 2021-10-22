@@ -20,15 +20,14 @@ type IncompleteTitle struct {
 }
 
 func ScanForMissingUpdates(localDB map[string]*db.SwitchGameFiles,
-	switchDB map[string]*db.SwitchTitle) map[string]IncompleteTitle {
-
+	switchDB map[string]*db.SwitchTitle, logger *zap.SugaredLogger) map[string]IncompleteTitle {
 	result := map[string]IncompleteTitle{}
 
 	//iterate over local files, and compare to remote versions
 	for idPrefix, switchFile := range localDB {
 
 		if !switchFile.BaseExist {
-			zap.S().Infof("missing base for game %v", idPrefix)
+			logger.Infof("missing base for game %v", idPrefix)
 			continue
 		}
 

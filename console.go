@@ -24,12 +24,12 @@ var (
 )
 
 type Console struct {
-	baseFolder  string
-	sugarLogger *zap.SugaredLogger
+	baseFolder string
+	logger     *zap.SugaredLogger
 }
 
-func CreateConsole(baseFolder string, sugarLogger *zap.SugaredLogger) *Console {
-	return &Console{baseFolder: baseFolder, sugarLogger: sugarLogger}
+func CreateConsole(baseFolder string, logger *zap.SugaredLogger) *Console {
+	return &Console{baseFolder: baseFolder, logger: logger}
 }
 
 func (c *Console) Start() {
@@ -46,7 +46,7 @@ func (c *Console) Start() {
 	progressBar = progressbar.New(2)
 
 	filename := filepath.Join(c.baseFolder, settings.TITLE_JSON_FILENAME)
-	titleFile, titlesEtag, err := db.LoadAndUpdateFile(settings.TITLES_JSON_URL, filename, settingsObj.TitlesEtag)
+	titleFile, titlesEtag, err := db.LoadAndUpdateFile(settings.TITLES_JSON_URL, filename, settingsObj.TitlesEtag, c.logger)
 	if err != nil {
 		fmt.Printf("title json file doesn't exist\n")
 		return
@@ -55,7 +55,7 @@ func (c *Console) Start() {
 	progressBar.Add(1)
 	//2. load the versions JSON object
 	filename = filepath.Join(c.baseFolder, settings.VERSIONS_JSON_FILENAME)
-	versionsFile, versionsEtag, err := db.LoadAndUpdateFile(settings.VERSIONS_JSON_URL, filename, settingsObj.VersionsEtag)
+	versionsFile, versionsEtag, err := db.LoadAndUpdateFile(settings.VERSIONS_JSON_URL, filename, settingsObj.VersionsEtag, c.logger)
 	if err != nil {
 		fmt.Printf("version json file doesn't exist\n")
 		return
@@ -98,7 +98,7 @@ func (c *Console) Start() {
 		recursiveMode = *recursive
 	}
 
-	localDbManager := db.NewLocalSwitchDBManager(c.baseFolder, c.sugarLogger, settingsObj)
+	localDbManager := db.NewLocalSwitchDBManager(c.baseFolder, c.logger, settingsObj)
 	if err != nil {
 		fmt.Printf("failed to create local files db :%v\n", err)
 		return
@@ -124,14 +124,14 @@ func (c *Console) Start() {
 	if settingsObj.OrganizeOptions.DeleteOldUpdateFiles {
 		progressBar = progressbar.New(2000)
 		fmt.Printf("\nDeleting old updates\n")
-		process.DeleteOldUpdates(c.baseFolder, localDB, c, settingsObj)
+		process.DeleteOldUpdates(c.baseFolder, localDB, c, settingsObj, c.logger)
 		progressBar.Finish()
 	}
 
 	if settingsObj.OrganizeOptions.RenameFiles || settingsObj.OrganizeOptions.CreateFolderPerGame {
 		progressBar = progressbar.New(2000)
 		fmt.Printf("\nStarting library organization\n")
-		process.OrganizeByFolders(folderToScan, localDB, titlesDB, c, settingsObj)
+		process.OrganizeByFolders(folderToScan, localDB, titlesDB, c, settingsObj, c.logger)
 		progressBar.Finish()
 	}
 
@@ -168,7 +168,7 @@ func (c *Console) processIssues(localDB *db.LocalSwitchFilesDB) {
 }
 
 func (c *Console) processMissingUpdates(localDB *db.LocalSwitchFilesDB, titlesDB *db.SwitchTitlesDB) {
-	incompleteTitles := process.ScanForMissingUpdates(localDB.TitlesMap, titlesDB.TitlesMap)
+	incompleteTitles := process.ScanForMissingUpdates(localDB.TitlesMap, titlesDB.TitlesMap, c.logger)
 	if len(incompleteTitles) != 0 {
 		fmt.Print("\nFound available updates:\n\n")
 	} else {
