@@ -18,7 +18,12 @@ var logger *zap.Logger
 
 // Create new logger
 func newLogger(workingFolder string, debug bool) {
-	config := zap.NewDevelopmentConfig()
+	var config zap.Config
+	if debug {
+		config = zap.NewDevelopmentConfig()
+	} else {
+		config = zap.NewProductionConfig()
+	}
 
 	// If not debug keep at info level
 	if !debug {
