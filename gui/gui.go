@@ -66,6 +66,7 @@ func NewGUI(l *zap.SugaredLogger, s *settings.AppSettings, w string) *GUI {
 // Init the GUI
 func (g *GUI) Init() {
 	// Grab the switch keys
+	//nolint:errcheck
 	g.settings.ReadKeys()
 
 	// Instantiate the database manager
@@ -432,6 +433,7 @@ func (g *GUI) UpdateProgress(curr int, total int, message string) {
 
 // Send a message to the window
 func (g *GUI) Send(name string, message string) {
+	//nolint:errcheck
 	g.Window.SendMessage(Message{
 		Name:    name,
 		Payload: message,
@@ -442,5 +444,6 @@ func (g *GUI) Send(name string, message string) {
 
 // Clear
 func (g *GUI) Clear() {
+	//nolint:errcheck
 	g.db.manager.ClearScanData()
 }

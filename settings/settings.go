@@ -157,6 +157,7 @@ func (a *AppSettings) Save() {
 	jsonBytes, jsonErr := json.MarshalIndent(a, "", "  ")
 	if jsonErr == nil {
 		// Write the file
+		//nolint:errcheck
 		ioutil.WriteFile(a.getPath(), jsonBytes, 0644)
 	}
 }

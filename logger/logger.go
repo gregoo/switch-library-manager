@@ -30,6 +30,7 @@ func newLogger(workingFolder string, debug bool) {
 	os.Remove(logPath)
 
 	if runtime.GOOS == "windows" {
+		//nolint:errcheck
 		zap.RegisterSink("winfile", func(u *url.URL) (zap.Sink, error) {
 			// Remove leading slash left by url.Parse()
 			return os.OpenFile(u.Path[1:], os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
@@ -62,6 +63,7 @@ func GetSugar(workingFolder string, debug bool) *zap.SugaredLogger {
 // Sync on defer (call it with defer)
 func Defer() {
 	if logger != nil {
+		//nolint:errcheck
 		logger.Sync()
 	}
 }

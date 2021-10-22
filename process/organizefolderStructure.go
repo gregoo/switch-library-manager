@@ -317,9 +317,7 @@ func applyTemplate(templateData map[string]string, useSafeNames bool, template s
 	result = strings.ReplaceAll(result, "[]", "")
 	result = strings.ReplaceAll(result, "()", "")
 	result = strings.ReplaceAll(result, "<>", "")
-	if strings.HasSuffix(result, ".") {
-		result = result[:len(result)-1]
-	}
+	result = strings.TrimSuffix(result, ".")
 
 	if useSafeNames {
 		result = nihongo.RomajiString(result)

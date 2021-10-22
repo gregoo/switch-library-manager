@@ -45,7 +45,7 @@ func getFsHeader(ncaHeader *ncaHeader, index int) (*fsHeader, error) {
 
 	actualHash := sha256.Sum256(fsHeaderBytes)
 
-	if bytes.Compare(actualHash[:], fsHeaderHash) != 0 {
+	if !bytes.Equal(actualHash[:], fsHeaderHash) {
 		return nil, errors.New("fs headerBytes hash mismatch")
 	}
 
