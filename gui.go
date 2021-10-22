@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"syscall"
 	"time"
 
 	"github.com/asticode/go-astikit"
@@ -42,9 +44,11 @@ func StartGUI() {
 			//VersionAstilectron: VersionAstilectron,
 			//VersionElectron:    VersionElectron,
 		},
-		Debug:         false,
-		Logger:        log.New(log.Writer(), log.Prefix(), log.Flags()),
-		RestoreAssets: RestoreAssets,
+		// Ignore urgent signals
+		IgnoredSignals: []os.Signal{syscall.SIGURG},
+		Debug:          false,
+		Logger:         log.New(log.Writer(), log.Prefix(), log.Flags()),
+		RestoreAssets:  RestoreAssets,
 		Windows: []*bootstrap.Window{{
 			Homepage: "app.html",
 			Adapter: func(w *astilectron.Window) {
