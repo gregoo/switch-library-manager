@@ -3,9 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/asticode/go-astikit"
@@ -32,12 +29,6 @@ func StartGUI() {
 	// Remote modules
 	enableRemoteModule := true
 
-	// Define ignored signals for non windows OS
-	var ignoredSignals []os.Signal
-	if runtime.GOOS != "windows" {
-		ignoredSignals = append(ignoredSignals, syscall.SIGURG)
-	}
-
 	// Run bootstrap
 	bootstrapErr := bootstrap.Run(bootstrap.Options{
 		Asset:    Asset,
@@ -52,10 +43,9 @@ func StartGUI() {
 			//VersionElectron:    VersionElectron,
 		},
 		// Ignore urgent signals
-		IgnoredSignals: ignoredSignals,
-		Debug:          false,
-		Logger:         log.New(log.Writer(), log.Prefix(), log.Flags()),
-		RestoreAssets:  RestoreAssets,
+		Debug:         false,
+		Logger:        log.New(log.Writer(), log.Prefix(), log.Flags()),
+		RestoreAssets: RestoreAssets,
 		Windows: []*bootstrap.Window{{
 			Homepage: "app.html",
 			Adapter: func(w *astilectron.Window) {
