@@ -4,8 +4,9 @@ import (
 	"crypto/aes"
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/giwty/switch-library-manager/switchfs/_crypto"
 	"strconv"
+
+	"github.com/giwty/switch-library-manager/switchfs/_crypto"
 )
 
 //https://switchbrew.org/wiki/NCA_Format
@@ -66,7 +67,7 @@ func DecryptNcaHeader(key string, encHeader []byte) (*ncaHeader, error) {
 
 	if magic == "NCA3" {
 		endOffset = 0xC00
-		decryptNcaHeader, err = _decryptNcaHeader(c, encHeader, endOffset, sectorSize, sector)
+		decryptNcaHeader, _ = _decryptNcaHeader(c, encHeader, endOffset, sectorSize, sector)
 	}
 
 	result := ncaHeader{headerBytes: decryptNcaHeader}

@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"strings"
 )
 
 const (
@@ -106,12 +105,12 @@ func readBinaryCnmt(pfs0 *PFS0, data []byte) (*ContentMetaAttributes, error) {
 	return &ContentMetaAttributes{Contents: contents, Version: int(version), TitleId: fmt.Sprintf("0%x", titleId), Type: metaType}, nil
 }
 
-func readXmlCnmt(xmlBytes []byte) (*ContentMetaAttributes, error) {
-	cmt := &ContentMeta{}
-	err := xml.Unmarshal(xmlBytes, &cmt)
-	if err != nil {
-		return nil, err
-	}
-	titleId := strings.Replace(cmt.ID, "0x", "", 1)
-	return &ContentMetaAttributes{Version: cmt.Version, TitleId: titleId, Type: cmt.Type}, nil
-}
+// func readXmlCnmt(xmlBytes []byte) (*ContentMetaAttributes, error) {
+// 	cmt := &ContentMeta{}
+// 	err := xml.Unmarshal(xmlBytes, &cmt)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	titleId := strings.Replace(cmt.ID, "0x", "", 1)
+// 	return &ContentMetaAttributes{Version: cmt.Version, TitleId: titleId, Type: cmt.Type}, nil
+// }

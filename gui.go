@@ -26,6 +26,9 @@ func StartGUI() {
 	// Cleanup
 	defer g.Defer()
 
+	// Remote modules
+	enableRemoteModule := true
+
 	// Run bootstrap
 	bootstrapErr := bootstrap.Run(bootstrap.Options{
 		Asset:    Asset,
@@ -39,6 +42,7 @@ func StartGUI() {
 			//VersionAstilectron: VersionAstilectron,
 			//VersionElectron:    VersionElectron,
 		},
+		// Ignore urgent signals
 		Debug:         false,
 		Logger:        log.New(log.Writer(), log.Prefix(), log.Flags()),
 		RestoreAssets: RestoreAssets,
@@ -54,6 +58,9 @@ func StartGUI() {
 				Center:          astikit.BoolPtr(true),
 				Height:          astikit.IntPtr(600),
 				Width:           astikit.IntPtr(1200),
+				WebPreferences: &astilectron.WebPreferences{
+					EnableRemoteModule: &enableRemoteModule,
+				},
 			},
 		}},
 		MenuOptions: []*astilectron.MenuItemOptions{

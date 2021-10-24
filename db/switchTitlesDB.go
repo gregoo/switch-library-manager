@@ -8,12 +8,11 @@ import (
 
 const (
 	TITLE_ID_BITMASK  = 0xFFFFFFFFFFFFE000
-	TITLE_TYPE_BASE   = 0
-	TITLE_TYPE_UPDATE = 800
+	TITLE_TYPE_BASE   = 0x0
+	TITLE_TYPE_UPDATE = 0x800
 )
 
 type TitleAttributes struct {
-	intId       uint64      `json:"-"`
 	Id          string      `json:"id"`
 	Name        string      `json:"name,omitempty"`
 	Version     json.Number `json:"version,omitempty"`

@@ -15,7 +15,7 @@ const (
 	SETTINGS_FILENAME      = "settings.json"
 	TITLE_JSON_FILENAME    = "titles.json"
 	VERSIONS_JSON_FILENAME = "versions.json"
-	SLM_VERSION            = "1.5.0"
+	SLM_VERSION            = "1.5.3"
 	TITLES_JSON_URL        = "https://tinfoil.media/repo/db/titles.json"
 	//TITLES_JSON_URL    = "https://raw.githubusercontent.com/blawar/titledb/master/titles.US.en.json"
 	VERSIONS_JSON_URL = "https://tinfoil.media/repo/db/versions.json"
@@ -157,6 +157,7 @@ func (a *AppSettings) Save() {
 	jsonBytes, jsonErr := json.MarshalIndent(a, "", "  ")
 	if jsonErr == nil {
 		// Write the file
+		//nolint:errcheck
 		ioutil.WriteFile(a.getPath(), jsonBytes, 0644)
 	}
 }

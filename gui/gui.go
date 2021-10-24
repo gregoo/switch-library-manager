@@ -66,6 +66,7 @@ func NewGUI(l *zap.SugaredLogger, s *settings.AppSettings, w string) *GUI {
 // Init the GUI
 func (g *GUI) Init() {
 	// Grab the switch keys
+	//nolint:errcheck
 	g.settings.ReadKeys()
 
 	// Instantiate the database manager
@@ -187,18 +188,18 @@ func (g *GUI) buildLocalDB(ignoreCache bool) error {
 // Organize the library
 func (g *GUI) organizeLibrary() {
 	// Bail if options are invalid
-	if !process.IsOptionsValid(g.settings.OrganizeOptions) {
+	if !process.IsOptionsValid(g.settings.OrganizeOptions, g.logger) {
 		g.logger.Error("the organize options in settings.json are not valid, please check that the template contains file/folder name")
 		g.Send(GUI_MESSAGE_ERROR, "the organize options in settings.json are not valid, please check that the template contains file/folder name")
 		return
 	}
 
 	// Organize
-	process.OrganizeByFolders(g.settings.Folder, g.db.files, g.db.titles, g, g.settings)
+	process.OrganizeByFolders(g.settings.Folder, g.db.files, g.db.titles, g, g.settings, g.logger)
 
 	// Delete old updates if requested
 	if g.settings.OrganizeOptions.DeleteOldUpdateFiles {
-		process.DeleteOldUpdates(g.workingFolder, g.db.files, g, g.settings)
+		process.DeleteOldUpdates(g.workingFolder, g.db.files, g, g.settings, g.logger)
 	}
 }
 
@@ -325,6 +326,7 @@ func (g *GUI) buildSwitchDb() error {
 		settings.TITLES_JSON_URL,
 		filepath.Join(g.workingFolder, settings.TITLE_JSON_FILENAME),
 		g.settings.TitlesEtag,
+		g.logger,
 	)
 
 	if titlesErr != nil {
@@ -341,6 +343,7 @@ func (g *GUI) buildSwitchDb() error {
 		settings.VERSIONS_JSON_URL,
 		filepath.Join(g.workingFolder, settings.VERSIONS_JSON_FILENAME),
 		g.settings.VersionsEtag,
+		g.logger,
 	)
 
 	if versionsErr != nil {
@@ -365,7 +368,7 @@ func (g *GUI) buildSwitchDb() error {
 
 // Get the missing updates
 func (g *GUI) getMissingUpdates() string {
-	missingUpdates := process.ScanForMissingUpdates(g.db.files.TitlesMap, g.db.titles.TitlesMap)
+	missingUpdates := process.ScanForMissingUpdates(g.db.files.TitlesMap, g.db.titles.TitlesMap, g.logger)
 	values := make([]process.IncompleteTitle, len(missingUpdates))
 	i := 0
 	for _, missingUpdate := range missingUpdates {
@@ -430,6 +433,7 @@ func (g *GUI) UpdateProgress(curr int, total int, message string) {
 
 // Send a message to the window
 func (g *GUI) Send(name string, message string) {
+	//nolint:errcheck
 	g.Window.SendMessage(Message{
 		Name:    name,
 		Payload: message,
@@ -440,5 +444,6 @@ func (g *GUI) Send(name string, message string) {
 
 // Clear
 func (g *GUI) Clear() {
+	//nolint:errcheck
 	g.db.manager.ClearScanData()
 }

@@ -23,7 +23,7 @@ func getTitleBaseAndType(id string) (string, uint64, error) {
 	baseIntId := intId & TITLE_ID_BITMASK
 
 	// Convert it to an hexa string
-	baseId = fmt.Sprintf("%x", baseIntId)
+	baseId = fmt.Sprintf("%016x", baseIntId)
 
 	// Get type
 	// Mask the ID with the title bitmask

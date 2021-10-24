@@ -21,7 +21,7 @@ var (
 	cjk                     = regexp.MustCompile("[\u2f70-\u2FA1\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\\p{Katakana}\\p{Hiragana}\\p{Hangul}]")
 )
 
-func DeleteOldUpdates(baseFolder string, localDB *db.LocalSwitchFilesDB, updateProgress db.ProgressUpdater, s *settings.AppSettings) {
+func DeleteOldUpdates(baseFolder string, localDB *db.LocalSwitchFilesDB, updateProgress db.ProgressUpdater, s *settings.AppSettings, logger *zap.SugaredLogger) {
 	i := 0
 	for k, v := range localDB.Skipped {
 		switch v.ReasonCode {
@@ -31,10 +31,10 @@ func DeleteOldUpdates(baseFolder string, localDB *db.LocalSwitchFilesDB, updateP
 			if updateProgress != nil {
 				updateProgress.UpdateProgress(0, 0, "deleting "+fileToRemove)
 			}
-			zap.S().Infof("Deleting file: %v \n", fileToRemove)
+			logger.Infof("Deleting file: %v \n", fileToRemove)
 			err := os.Remove(fileToRemove)
 			if err != nil {
-				zap.S().Errorf("Failed to delete file  %v  [%v]\n", fileToRemove, err)
+				logger.Errorf("Failed to delete file  %v  [%v]\n", fileToRemove, err)
 				continue
 			}
 			i++
@@ -46,9 +46,9 @@ func DeleteOldUpdates(baseFolder string, localDB *db.LocalSwitchFilesDB, updateP
 		if updateProgress != nil {
 			updateProgress.UpdateProgress(i, i+1, "deleting empty folders... (can take 1-2min)")
 		}
-		err := deleteEmptyFolders(baseFolder)
+		err := deleteEmptyFolders(baseFolder, logger)
 		if err != nil {
-			zap.S().Errorf("Failed to delete empty folders [%v]\n", err)
+			logger.Errorf("Failed to delete empty folders [%v]\n", err)
 		}
 		if updateProgress != nil {
 			updateProgress.UpdateProgress(i+1, i+1, "deleting empty folders... (can take 1-2min)")
@@ -59,13 +59,13 @@ func DeleteOldUpdates(baseFolder string, localDB *db.LocalSwitchFilesDB, updateP
 func OrganizeByFolders(baseFolder string,
 	localDB *db.LocalSwitchFilesDB,
 	titlesDB *db.SwitchTitlesDB,
-	updateProgress db.ProgressUpdater, s *settings.AppSettings) {
+	updateProgress db.ProgressUpdater, s *settings.AppSettings, logger *zap.SugaredLogger) {
 
 	//validate template rules
 
 	options := s.OrganizeOptions
-	if !IsOptionsValid(options) {
-		zap.S().Error("the organize options in settings.json are not valid, please check that the template contains file/folder name")
+	if !IsOptionsValid(options, logger) {
+		logger.Error("the organize options in settings.json are not valid, please check that the template contains file/folder name")
 		return
 	}
 	i := 0
@@ -106,7 +106,7 @@ func OrganizeByFolders(baseFolder string,
 			if _, err := os.Stat(destinationPath); os.IsNotExist(err) {
 				err = os.Mkdir(destinationPath, os.ModePerm)
 				if err != nil {
-					zap.S().Errorf("Failed to create folder %v - %v\n", folderToCreate, err)
+					logger.Errorf("Failed to create folder %v - %v\n", folderToCreate, err)
 					continue
 				}
 			}
@@ -126,7 +126,7 @@ func OrganizeByFolders(baseFolder string,
 					to := filepath.Join(destinationPath, file.Name())
 					err := moveFile(from, to)
 					if err != nil {
-						zap.S().Errorf("Failed to move file [%v]\n", err)
+						logger.Errorf("Failed to move file [%v]\n", err)
 						continue
 					}
 				}
@@ -140,7 +140,7 @@ func OrganizeByFolders(baseFolder string,
 		to := filepath.Join(destinationPath, getFileName(options, v.File.ExtendedInfo.FileName, templateData))
 		err := moveFile(from, to)
 		if err != nil {
-			zap.S().Errorf("Failed to move file [%v]\n", err)
+			logger.Errorf("Failed to move file [%v]\n", err)
 			continue
 		}
 
@@ -165,7 +165,7 @@ func OrganizeByFolders(baseFolder string,
 			}
 			err := moveFile(from, to)
 			if err != nil {
-				zap.S().Errorf("Failed to move file [%v]\n", err)
+				logger.Errorf("Failed to move file [%v]\n", err)
 				continue
 			}
 		}
@@ -186,7 +186,7 @@ func OrganizeByFolders(baseFolder string,
 			}
 			err = moveFile(from, to)
 			if err != nil {
-				zap.S().Errorf("Failed to move file [%v]\n", err)
+				logger.Errorf("Failed to move file [%v]\n", err)
 				continue
 			}
 		}
@@ -197,9 +197,9 @@ func OrganizeByFolders(baseFolder string,
 			i += 1
 			updateProgress.UpdateProgress(i, tasksSize, "deleting empty folders... (can take 1-2min)")
 		}
-		err := deleteEmptyFolders(baseFolder)
+		err := deleteEmptyFolders(baseFolder, logger)
 		if err != nil {
-			zap.S().Errorf("Failed to delete empty folders [%v]\n", err)
+			logger.Errorf("Failed to delete empty folders [%v]\n", err)
 		}
 		if updateProgress != nil {
 			i += 1
@@ -213,15 +213,15 @@ func OrganizeByFolders(baseFolder string,
 	}
 }
 
-func IsOptionsValid(options settings.OrganizeOptions) bool {
+func IsOptionsValid(options settings.OrganizeOptions, logger *zap.SugaredLogger) bool {
 	if options.RenameFiles {
 		if options.FileNameTemplate == "" {
-			zap.S().Error("file name template cannot be empty")
+			logger.Error("file name template cannot be empty")
 			return false
 		}
 		if !strings.Contains(options.FileNameTemplate, settings.TEMPLATE_TITLE_NAME) &&
 			!strings.Contains(options.FileNameTemplate, settings.TEMPLATE_TITLE_ID) {
-			zap.S().Error("file name template needs to contain one of the following - titleId or title name")
+			logger.Error("file name template needs to contain one of the following - titleId or title name")
 			return false
 		}
 
@@ -229,12 +229,12 @@ func IsOptionsValid(options settings.OrganizeOptions) bool {
 
 	if options.CreateFolderPerGame {
 		if options.FolderNameTemplate == "" {
-			zap.S().Error("folder name template cannot be empty")
+			logger.Error("folder name template cannot be empty")
 			return false
 		}
 		if !strings.Contains(options.FolderNameTemplate, settings.TEMPLATE_TITLE_NAME) &&
 			!strings.Contains(options.FolderNameTemplate, settings.TEMPLATE_TITLE_ID) {
-			zap.S().Error("folder name template needs to contain one of the following - titleId or title name")
+			logger.Error("folder name template needs to contain one of the following - titleId or title name")
 			return false
 		}
 	}
@@ -317,9 +317,7 @@ func applyTemplate(templateData map[string]string, useSafeNames bool, template s
 	result = strings.ReplaceAll(result, "[]", "")
 	result = strings.ReplaceAll(result, "()", "")
 	result = strings.ReplaceAll(result, "<>", "")
-	if strings.HasSuffix(result, ".") {
-		result = result[:len(result)-1]
-	}
+	result = strings.TrimSuffix(result, ".")
 
 	if useSafeNames {
 		result = nihongo.RomajiString(result)
@@ -334,15 +332,15 @@ func applyTemplate(templateData map[string]string, useSafeNames bool, template s
 	return folderIllegalCharsRegex.ReplaceAllString(result, "")
 }
 
-func deleteEmptyFolders(path string) error {
+func deleteEmptyFolders(path string, logger *zap.SugaredLogger) error {
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			zap.S().Error("Error while deleting empty folders", err)
+			logger.Error("Error while deleting empty folders", err)
 		}
 		if info != nil && info.IsDir() {
-			err = deleteEmptyFolder(path)
+			err = deleteEmptyFolder(path, logger)
 			if err != nil {
-				zap.S().Error("Error while deleting empty folders", err)
+				logger.Error("Error while deleting empty folders", err)
 			}
 		}
 
@@ -351,7 +349,7 @@ func deleteEmptyFolders(path string) error {
 	return err
 }
 
-func deleteEmptyFolder(path string) error {
+func deleteEmptyFolder(path string, logger *zap.SugaredLogger) error {
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return err
@@ -361,7 +359,7 @@ func deleteEmptyFolder(path string) error {
 		return nil
 	}
 
-	zap.S().Infof("\nDeleting empty folder [%v]", path)
+	logger.Infof("\nDeleting empty folder [%v]", path)
 	_ = os.Remove(path)
 
 	return nil

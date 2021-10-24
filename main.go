@@ -30,12 +30,13 @@ func main() {
 	appSettings = settings.NewAppSettings(workingFolder)
 
 	// Create a new global logger
-	l = logger.GetSugar(workingFolder, appSettings.Debug)
+	l = logger.GetSugar(appSettings.GetHomedirPath(), appSettings.Debug)
 	defer logger.Defer() // flushes buffer, if any
 
 	l.Info("[SLM starts]")
 	l.Infof("[Executable: %v]", exePath)
 	l.Infof("[Working directory: %v]", workingFolder)
+	l.Infof("[Home directory: %v]", appSettings.Homedir)
 
 	// Force console if nothing in the asset dir
 	files, err := AssetDir(workingFolder)

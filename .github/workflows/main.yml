@@ -3,9 +3,8 @@ name: Build switch-library-manager
 # On master and manually
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
@@ -14,7 +13,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        
+
+      - name: Create release variable
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
       - name: Go cache
         uses: actions/cache@v2
         with:
@@ -29,7 +31,7 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.16.5'
-          
+
       - name: Setup astilectron
         run: |
           go get -u github.com/asticode/go-astilectron-bundler/...
@@ -37,3 +39,29 @@ jobs:
 
       - name: Bundle
         run: ~/go/bin/astilectron-bundler
+
+      - name: Zip the MacOS release
+        run: |
+          cd output/darwin-amd64
+          zip -q -X -r Switch-Library-Manager-${RELEASE_VERSION}-MacOS.zip Switch-Library-Manager.app/
+          cd ../..
+
+      - name: Zip the Linux release
+        run: |
+          cd output/linux-amd64
+          zip -q -X Switch-Library-Manager-${RELEASE_VERSION}-Linux.zip Switch-Library-Manager
+          cd ../..
+
+      - name: Zip the Windows release
+        run: |
+          cd output/windows-amd64
+          zip -q -X Switch-Library-Manager-${RELEASE_VERSION}-Windows.zip Switch-Library-Manager.exe
+          cd ../..
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "output/*/*.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # draft: true
+          allowUpdates: true

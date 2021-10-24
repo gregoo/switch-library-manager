@@ -64,6 +64,7 @@ func (pd *PersistentDB) Close() {
 // Update the app version
 func (pd *PersistentDB) UpdateVersion() {
 	// Set the database version to the app version
+	//nolint:errcheck
 	pd.db.Update(func(tx *bolt.Tx) error {
 		// Create the internal metadata bucket if it does not exist
 		bucket := tx.Bucket([]byte(DB_BUCKET_INTERNAL_METADATA))
